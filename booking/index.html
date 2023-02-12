@@ -1,0 +1,118 @@
+<h1>Бронирования</h1>
+
+		<div class="info">
+			<h3>ВАЖНО п.1 Содержание</h3>
+			<p>Экран оформления бронирования – на данном экране пользователь должен видеть информацию о выбранных рейсах, а также иметь возможность добавить пассажиров.</p>
+			<p>Если пользователь авторизован, то в бронировании изначально должен быть указан авторизованный пассажир.</p>
+			<p>Также реализована возможность удалить пассажира, но нельзя удалить пассажира, если он единственный. </p>
+			
+			<h3>ВАЖНО п.2 Переходы</h3>
+			<p>Нажатие на кнопку “Back” позволяет вернуться назад (на экран с найденными рейсами).</p>
+			<p>Нажатие на кнопку “Confirm” создает бронирование и позволяет перейти на экран управления бронированием.</p>
+
+
+			<h3>ВАЖНО п.3 И ещё ... </h3>
+			<p>Здесь и везде, тестируя программу не забывайте регулярно чистить кэш, в том числе в формате жесткой перезагрузки</p>
+		</div>	
+
+<!-- Блоки вывода данных -->
+<div id = "response">
+	<div id = "flights"></div>
+	<div id = "passengers"></div>
+</div>
+
+<script>
+	// Активная страница
+	active_page = "booking";
+
+	// Если бронирования есть
+	if (booking.flights_to.flight_id != undefined || booking.flights_back.flight_id != undefined) {
+		// Если полёта обратно нет
+		if(booking.flights_to.flight_id != undefined && booking.flights_back.flight_id == undefined) {
+			// Составление объекта отправки серверу
+			var js = {
+				"flights_from": {
+					"id": booking.flights_to.flight_id,
+					"date": booking.flights_to.from.date,
+				},
+				"passengers": booking.passengers
+			};
+		// Если полёта туда нет
+		} else if (booking.flights_back.flight_id != undefined && booking.flights_to.flight_id == undefined) {
+			// Составление объекта отправки серверу
+			var js = {
+				"flights_back":  {
+					"id": booking.flights_back.flight_id,
+					"date": booking.flights_back.from.date,
+				},
+				"passengers": booking.passengers
+			};
+		// Если оба полёта есть
+		} else {
+			// Составление объекта отправки серверу
+			var js = {
+				"flights_from": {
+					"id": booking.flights_to.flight_id,
+					"date": booking.flights_to.from.date,
+				},
+				"flights_back":  {
+					"id": booking.flights_back.flight_id,
+					"date": booking.flights_back.from.date,
+				},
+				"passengers": booking.passengers
+			};
+		}
+	}
+
+	// Ajax запрос
+	$.ajax({
+		url: "server/server.php", // путь
+		type: "POST", // тип отправляемых данных
+		data: js, // отправляемые данные
+		// В случае успеха
+		success: function(data) {
+			//Проверка наличия бронирования
+			if (booking.flights_to.flight_id == undefined && booking.flights_back.flight_id == undefined) {
+				out = "<h2>Бронирования не выбраны</h2>";
+				out += "<h3>Вы можете выбрать бронирование <a onclick = 'app_selectionflight()'>здесь</a></h3>";
+				$("#response").html(out);
+			} else {
+				//Проверка наличия бронирования рейсов туда
+				if (booking.flights_to.flight_id != undefined) {
+					var arr = [];
+					arr.push(booking.flights_to);
+					outTableFlight(arr, "flights_to");
+				} else {
+					out = "<h2>Информация по забронированным рейсам Туда отсутствует</h2>";
+					$("#response").append(out);
+				}
+				
+				//Проверка наличия бронирования рейсов обратно
+				if (booking.flights_back.flight_id != undefined) {
+					var arr = [];
+					arr.push(booking.flights_back);
+					outTableFlight(arr, "flights_back");
+				} else {
+					out = "<h2>Информация по забронированным рейсам Обратно отсутствует</h2>";
+					$("#response").append(out);
+				}
+				// Вызов функции вывода таблицы пассажиров
+				createTablePassengers();
+
+				// Вызов функции вывода формы добавления пассажиров
+				createFormPassengers();
+			}
+		},
+		// В случае неудачи
+		error: function(jqXHR) {
+			data = JSON.parse(jqXHR.responseText);
+			out = `
+				<h2>Ошибка ${jqXHR.status}</h2>
+				<p>${jqXHR.responseText}</p>
+			`;
+			$("#response").append(out);
+		}
+
+	});
+
+</script>

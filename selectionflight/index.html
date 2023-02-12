@@ -1,0 +1,60 @@
+<h1>Выбор рейса</h1>
+
+		<div class="info">
+			<h3>ВАЖНО п.1 Содержание</h3>
+			<p>Представляем информацию о найденных рейсах. Мы выбрали для этого табличный вид.</p>
+			<p>Пользователь выбирает рейс и переходит на страницу оформления бронирования.</p>
+			
+			<h3>ВАЖНО п.2 Переходы</h3>
+			<p>Нажатие на кнопку “Back” позволяет вернуться назад (на главный экран).</p>
+			<p>Нажатие на кнопку “Go to booking” переходит к экрану оформления бронирования.</p>
+
+			<h3>ВАЖНО п.3 И ещё ... </h3>
+			<p>В нашей работе функционал страницы реализован не полностью. Но именно в таком объеме и примерно таком же исполнении наш участник выполнил его на чемпионате.</p>
+		</div>	
+
+<!-- Блоки вывода данных -->
+<div id = "response">
+	<div id = "flights"></div>
+	<div id = "passengers"></div>
+</div>
+
+
+<script>
+	// Активная страница
+	active_page = "selectionflight";
+
+	// Ajax запрос
+	$.ajax({
+		url: "server/server.php", // путь
+		type: "GET", // метод
+		contentType: "application/json", // тип данных (а зачем?)
+		// В случае успеха
+		success: function(data) {
+			// Преобразование строки в объект
+			data = JSON.parse(data);
+			// Запись объекта в свойство объекта
+			booking.data = data;
+			// Вызов функции вывода таблицы рейсов
+			outTableFlight(data.flights_to, "flights_to");
+	
+			// Вызов функции вывода таблицы рейсов
+			outTableFlight(data.flights_back, "flights_back");
+	
+			// Вызов функции вывода кнопок
+			createButtonSelectionFlight();
+		},
+		// В случае неудачи
+		error: function(jqXHR) {
+			data = JSON.parse(jqXHR.responseText);
+			out = `
+				<h2>Ошибка ${jqXHR.status}</h2>
+				<p>${jqXHR.responseText}</p>
+			`;
+			$("#response").append(out);
+		}
+
+	});
+			
+	
+</script>
